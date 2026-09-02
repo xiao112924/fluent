@@ -1,0 +1,9 @@
+order,frequency_Hz,wall_to_simple_mean_response_ratio,wall_to_simple_max_response_ratio,dominant_order_map_unchanged
+1,178.813925756,0.4,0.4,true
+2,357.627851512,0.4,0.4,true
+3,536.441777268,0.4,0.4,true
+4,715.255703024,0.4,0.4,true
+5,894.06962878,0.4,0.4,true
+6,1072.883554536,0.4,0.4,true
+7,1251.697480292,0.4,0.4,true
+8,1430.511406048,0.4,0.4,true
