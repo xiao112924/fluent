@@ -37,4 +37,23 @@ cfg.fluid.pressure_field_model = 'endpoint_constrained';
 cfg.fluid.pressure_field_model = 'acoustic_bvp';
 ```
 
-压力推力符号采用：单元起点 `-p1*A*t`，终点 `+p2*A*t`。
+## 压力到结构载荷模型
+
+压力场与压力到结构载荷的转换分开配置。当前示例仍使用：
+
+```matlab
+cfg.fluid.pressure_field_model = 'endpoint_constrained';
+```
+
+并显式选择新的物理耦合模型：
+
+```matlab
+cfg.coupling.pressure_load_model = 'wall_stress_coupling';
+cfg.coupling.wall_formulation = 'thick_wall';
+cfg.coupling.capped_end = true;
+cfg.coupling.external_pressure = 0;
+```
+
+`simple_thrust` 保留旧版 `p*A_i` 端部推力，且旧配置若缺少 `pressure_load_model` 字段仍默认使用该模式，以保证向后兼容。`wall_stress_coupling` 根据内外压、管径、泊松比、薄/厚壁形式和封闭端条件计算管壁轴向压力合力，再沿单元轴向组装到结构节点。
+
+该改动不包含任何逐阶幅值修正、实验拟合系数或人为声学损失倍率。
