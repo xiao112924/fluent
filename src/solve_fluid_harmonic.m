@@ -7,6 +7,9 @@ function fluidSol = solve_fluid_harmonic(mesh,cfg,omega,Pin,Pout,inletNode,outle
 %       做插值。该模式不额外生成端点之外的1D声学驻波峰，适用于入口、
 %       出口压力时程都已知的工程脉动响应计算。
 %
+%   fetm_impedance
+%       OpenPulse式FETM：只规定一个端点压力，另一端使用声学阻抗。
+%
 %   acoustic_bvp (兼容旧版)
 %       Womersley串联阻抗 + 弹性管波速的1D Helmholtz边值问题。
 %       在液柱声学固有频率附近可能产生明显内部驻波放大，应结合实际
@@ -38,6 +41,11 @@ switch model
         % 严格回写端点，避免浮点误差。
         p(inletNode) = Pin;
         p(outletNode) = Pout;
+
+    case "fetm_impedance"
+        fluidSol = solve_fetm_impedance_pressure( ...
+            mesh,cfg,omega,Pin,Pout,inletNode,outletNode);
+        return;
 
     case "acoustic_bvp"
         Aglob = sparse(n,n);
