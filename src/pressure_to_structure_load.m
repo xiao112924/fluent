@@ -20,9 +20,46 @@ for e=1:mesh.nelem
     p1 = fluidSol.p(n1);
     p2 = fluidSol.p(n2);
 
-    % 与静压闭口端压力推力采用同一物理方向。
-    f1 = -p1*A*t;
-    f2 = +p2*A*t;
+    if isfield(cfg.coupling,'pressure_load_model') && ~isempty(cfg.coupling.pressure_load_model)
+        loadModel = lower(string(cfg.coupling.pressure_load_model));
+    else
+        loadModel = "simple_thrust";
+    end
+
+    switch loadModel
+        case "simple_thrust"
+            % 与旧版一致：内流道截面积上的端部压力推力。
+            f1 = -p1*A*t;
+            f2 = +p2*A*t;
+
+        case "wall_stress_coupling"
+            if isfield(cfg.coupling,'external_pressure') && ~isempty(cfg.coupling.external_pressure)
+                pext = cfg.coupling.external_pressure;
+            else
+                pext = 0;
+            end
+            if isfield(cfg.coupling,'capped_end') && ~isempty(cfg.coupling.capped_end)
+                cappedEnd = cfg.coupling.capped_end;
+            else
+                cappedEnd = true;
+            end
+            if isfield(cfg.coupling,'wall_formulation') && ~isempty(cfg.coupling.wall_formulation)
+                wallFormulation = cfg.coupling.wall_formulation;
+            else
+                wallFormulation = "thick_wall";
+            end
+
+            N1 = wall_pressure_axial_resultant(p1,mesh.Di(e),mesh.Do(e), ...
+                cfg.solid.nu,pext,cappedEnd,wallFormulation);
+            N2 = wall_pressure_axial_resultant(p2,mesh.Di(e),mesh.Do(e), ...
+                cfg.solid.nu,pext,cappedEnd,wallFormulation);
+            f1 = -N1*t;
+            f2 = +N2*t;
+
+        otherwise
+            error('PipePulse:PressureLoadModel', ...
+                '不支持的 pressure_load_model: %s。', loadModel);
+    end
 
     if cfg.coupling.include_momentum && abs(cfg.fluid.mean_velocity)>0
         Q = fluidSol.Qe(e);
