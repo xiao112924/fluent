@@ -120,6 +120,14 @@ cfg.excitation.Pout = @(t) ...
 cfg.coupling.include_momentum = true;
 cfg.coupling.include_viscous_wall_shear = false;
 
+% ---------- 压力到结构载荷耦合 ----------
+% simple_thrust：旧版 p*A_i 端部推力；
+% wall_stress_coupling：考虑管壁轴向应力、泊松效应和封闭端效应。
+cfg.coupling.pressure_load_model = 'wall_stress_coupling';
+cfg.coupling.wall_formulation = 'thick_wall';
+cfg.coupling.capped_end = true;
+cfg.coupling.external_pressure = 0;
+
 
 % ---------- 预应力模态与结构FRF ----------
 cfg.modal.n_modes = 10;   % 输出前10阶预应力固有频率
