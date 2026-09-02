@@ -9,12 +9,17 @@ if isfield(cfg,'structure') && isfield(cfg.structure,'beam_theory')
 else
     beamTheory = 'euler_bernoulli';
 end
+if isfield(cfg,'structure') && isfield(cfg.structure,'fluid_mass_model')
+    fluidMassModel = cfg.structure.fluid_mass_model;
+else
+    fluidMassModel = 'legacy';
+end
 
 for e=1:mesh.nelem
     n1 = mesh.elements(e,1);
     n2 = mesh.elements(e,2);
     [Ke,Me] = beam3d_element(mesh.nodes(n1,:),mesh.nodes(n2,:),...
-        mesh.Di(e),mesh.Do(e),cfg.solid,cfg.fluid,beamTheory);
+        mesh.Di(e),mesh.Do(e),cfg.solid,cfg.fluid,beamTheory,fluidMassModel);
     dof = [node_dofs(n1),node_dofs(n2)];
     [ii,jj] = ndgrid(dof,dof);
     I = [I;ii(:)]; %#ok<AGROW>
