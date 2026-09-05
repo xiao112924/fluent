@@ -84,8 +84,12 @@ switch type
         end
         if isfield(el,'bulk_modulus') && ~isempty(el.bulk_modulus)
             Kf = el.bulk_modulus;
-        else
+        elseif isfield(cfg.fluid,'bulk') && ~isempty(cfg.fluid.bulk)
+            Kf = cfg.fluid.bulk;
+        elseif isfield(cfg.fluid,'bulk_modulus') && ~isempty(cfg.fluid.bulk_modulus)
             Kf = cfg.fluid.bulk_modulus;
+        else
+            error('PipePulse:AcousticChamber','No fluid bulk modulus is available.');
         end
         if Kf <= 0
             error('PipePulse:AcousticChamber','bulk modulus must be positive.');
