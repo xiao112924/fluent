@@ -6,13 +6,14 @@ q = complex(zeros(net.nnode,1));
 elementCache = cell(numel(net.elements),1);
 
 for i=1:numel(net.elements)
-    [Ye,nodes,meta] = acoustic_network_element_admittance(net.elements(i),mesh,cfg,omega);
+    el = net.elements{i};
+    [Ye,nodes,meta] = acoustic_network_element_admittance(el,mesh,cfg,omega);
     Y(nodes,nodes) = Y(nodes,nodes) + Ye;
     elementCache{i} = struct('Ye',Ye,'nodes',nodes,'meta',meta);
 end
 
 for i=1:numel(net.terminations)
-    term = net.terminations(i);
+    term = net.terminations{i};
     node = resolve_node(term.node,inletNode,outletNode);
     Zchar = node_zchar(node,net,mesh,cfg);
     omegaRef = omega;
@@ -36,7 +37,7 @@ end
 
 function Zchar = node_zchar(node,net,mesh,cfg)
 for i=1:numel(net.elements)
-    el=net.elements(i);
+    el=net.elements{i};
     if ~strcmpi(el.type,'pipe_fetm') || ~any(el.nodes==node), continue; end
     if isfield(el,'structural_element') && ~isempty(el.structural_element)
         e=el.structural_element; Di=mesh.Di(e); Do=mesh.Do(e);
