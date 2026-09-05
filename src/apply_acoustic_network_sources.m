@@ -2,12 +2,12 @@ function [Y,q,known,pk] = apply_acoustic_network_sources(Y,q,net,mesh,cfg,omega,
 %APPLY_ACOUSTIC_NETWORK_SOURCES Add pressure, flow, and Thevenin sources.
 known = zeros(0,1); pk = complex(zeros(0,1));
 for i=1:numel(net.sources)
-    s = net.sources(i);
+    s = net.sources{i};
     node = resolve_node(s.node,inletNode,outletNode);
     type = lower(string(s.type));
     switch type
         case "pressure"
-            sourcePressure = source_value(s,node,Pin,Pout,inletNode,outletNode);
+            sourcePressure = source_value(s,node,Pin,Pout,inletNode,outletNode,omega);
             idx = find(known==node,1);
             if isempty(idx)
                 known(end+1,1)=node; %#ok<AGROW>
@@ -20,10 +20,10 @@ for i=1:numel(net.sources)
             if ~isfield(s,'value') || isempty(s.value)
                 error('PipePulse:AcousticSource','volume_flow requires value.');
             end
-            q(node) = q(node) + s.value;
+            q(node) = q(node) + resolve_frequency_value(s.value,omega);
 
         case "thevenin_pressure"
-            sourcePressure = source_value(s,node,Pin,Pout,inletNode,outletNode);
+            sourcePressure = source_value(s,node,Pin,Pout,inletNode,outletNode,omega);
             Zs = source_impedance(s,node,net,mesh,cfg,omega);
             Y(node,node) = Y(node,node) + 1/Zs;
             q(node) = q(node) + sourcePressure/Zs;
@@ -45,9 +45,9 @@ else
 end
 end
 
-function value = source_value(s,node,Pin,Pout,inletNode,outletNode)
+function value = source_value(s,node,Pin,Pout,inletNode,outletNode,omega)
 if isfield(s,'value') && ~isempty(s.value)
-    value = s.value;
+    value = resolve_frequency_value(s.value,omega);
 elseif node==inletNode
     value = Pin;
 elseif node==outletNode
@@ -57,9 +57,21 @@ else
 end
 end
 
+function value = resolve_frequency_value(raw,omega)
+if isa(raw,'function_handle')
+    value = raw(omega);
+elseif isnumeric(raw) && isscalar(raw)
+    value = raw;
+else
+    error('PipePulse:AcousticSource','Frequency-dependent source values must be scalar or function_handle(omega).');
+end
+end
+
 function Zs = source_impedance(s,node,net,mesh,cfg,omega)
-if isfield(s,'impedance') && isnumeric(s.impedance)
+if isfield(s,'impedance') && isnumeric(s.impedance) && isscalar(s.impedance)
     Zs = s.impedance;
+elseif isfield(s,'impedance') && isa(s.impedance,'function_handle')
+    Zs = s.impedance(omega);
 elseif isfield(s,'impedance') && isstruct(s.impedance)
     Zchar = node_zchar(node,net,mesh,cfg);
     omegaRef = omega;
@@ -81,7 +93,7 @@ end
 
 function Zchar = node_zchar(node,net,mesh,cfg)
 for i=1:numel(net.elements)
-    el=net.elements(i);
+    el=net.elements{i};
     if ~strcmpi(el.type,'pipe_fetm') || ~any(el.nodes==node), continue; end
     if isfield(el,'structural_element') && ~isempty(el.structural_element)
         e=el.structural_element; Di=mesh.Di(e); Do=mesh.Do(e);
