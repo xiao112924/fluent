@@ -40,6 +40,12 @@ def test_dispatcher_exposes_acoustic_network_without_removing_legacy_modes():
         assert token in s
     assert 'solve_acoustic_network_harmonic' in s
 
+def test_network_builder_normalizes_heterogeneous_entries_to_cells():
+    s=read('src/build_acoustic_network_from_mesh.m').lower()
+    assert 'net.elements = {}' in s or 'net.elements={}' in s.replace(' ','')
+    assert 'normalize_entries' in s
+    assert 'num2cell' in s
+
 def pipe_y(omega,L,rho,c,A):
     k=omega/c; zv=rho*c/A
     a=1j/(zv*np.sin(k*L)); co=np.cos(k*L)
