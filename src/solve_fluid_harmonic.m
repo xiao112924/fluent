@@ -10,6 +10,10 @@ function fluidSol = solve_fluid_harmonic(mesh,cfg,omega,Pin,Pout,inletNode,outle
 %   fetm_impedance
 %       OpenPulse式FETM：只规定一个端点压力，另一端使用声学阻抗。
 %
+%   acoustic_network
+%       通用液压声学网络：FETM管段 + 阻抗/惯性/容腔 + 压力/流量/
+%       Thevenin源，按节点导纳矩阵统一组装求解。
+%
 %   acoustic_bvp (兼容旧版)
 %       Womersley串联阻抗 + 弹性管波速的1D Helmholtz边值问题。
 %       在液柱声学固有频率附近可能产生明显内部驻波放大，应结合实际
@@ -44,6 +48,11 @@ switch model
 
     case "fetm_impedance"
         fluidSol = solve_fetm_impedance_pressure( ...
+            mesh,cfg,omega,Pin,Pout,inletNode,outletNode);
+        return;
+
+    case "acoustic_network"
+        fluidSol = solve_acoustic_network_harmonic( ...
             mesh,cfg,omega,Pin,Pout,inletNode,outletNode);
         return;
 
