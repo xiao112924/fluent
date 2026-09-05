@@ -39,16 +39,19 @@ cfg.fluid.mean_velocity = 0;  % m/s
 cfg.fluid.wave_speed_override = NaN;
 
 % 动态压力沿程模型：
-% endpoint_constrained（推荐）：入口/出口复压力均已知时，沿弧长插值，
-% 不额外引入1D液柱驻波峰。
-% acoustic_bvp：保留旧版Womersley声学边值模型，用于有明确声学端部模型时对照。
+% endpoint_constrained：入口/出口复压力均已知时的实验复现默认模式；
+% acoustic_network：只有源/网络物理参数时，用FETM网络预测新管路；
+% fetm_impedance：单管+单端阻抗诊断模式；
+% acoustic_bvp：旧双端声学边值模型，仅保留兼容。
 cfg.fluid.pressure_field_model = 'endpoint_constrained';
-
 
 % ---------- 静压预应力 ----------
 % true: 将入口/出口平均静压用于结构几何刚度
 % false: 退化为旧版，不考虑静压应力刚化
 cfg.prestress.enabled = true;
+% 正式2.8工程基线保留已验证的legacy预应力；OpenPulse预应力在
+% example_openpulse_consistent.m 中单独启用。
+cfg.prestress.model = 'legacy';
 
 % 闭口端压力推力系数：
 % 1.0 -> N0 = (p0-p_external)*Ai
@@ -121,13 +124,13 @@ cfg.coupling.include_momentum = true;
 cfg.coupling.include_viscous_wall_shear = false;
 
 % ---------- 压力到结构载荷耦合 ----------
-% simple_thrust：旧版 p*A_i 端部推力；
-% wall_stress_coupling：考虑管壁轴向应力、泊松效应和封闭端效应。
-cfg.coupling.pressure_load_model = 'wall_stress_coupling';
-cfg.coupling.wall_formulation = 'thick_wall';
+% 正式2.8工程基线使用 simple_thrust，因为其与当前endpoint压力场、实验
+% 及原结构边界的组合已经验证；OpenPulse wall-stress 模型作为独立诊断
+% 模式保留，不再作为默认值。
+cfg.coupling.pressure_load_model = 'simple_thrust';
+cfg.coupling.wall_formulation = 'thick_wall';  % 仅wall_stress_coupling时使用
 cfg.coupling.capped_end = true;
 cfg.coupling.external_pressure = 0;
-
 
 % ---------- 预应力模态与结构FRF ----------
 cfg.modal.n_modes = 10;   % 输出前10阶预应力固有频率
