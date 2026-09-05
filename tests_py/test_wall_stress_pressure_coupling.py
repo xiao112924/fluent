@@ -23,13 +23,18 @@ def test_wall_pressure_axial_resultant_helper_formulas_present():
     assert 'N = Aw*(capped_end*stress_axial - nu*p*(Do/(Do-Di)-1));' in text
 
 
-def test_example_case_selects_wall_stress_coupling_without_changing_pressure_field():
-    text = (ROOT / 'example_case.m').read_text(encoding='utf-8')
-    assert "cfg.coupling.pressure_load_model = 'wall_stress_coupling';" in text
-    assert "cfg.coupling.wall_formulation = 'thick_wall';" in text
-    assert 'cfg.coupling.capped_end = true;' in text
-    assert 'cfg.coupling.external_pressure = 0;' in text
-    assert "cfg.fluid.pressure_field_model = 'endpoint_constrained';" in text
+def test_wall_stress_coupling_is_explicit_diagnostic_not_formal_default():
+    base = (ROOT / 'example_case.m').read_text(encoding='utf-8')
+    assert "cfg.coupling.pressure_load_model = 'simple_thrust';" in base
+    assert "cfg.fluid.pressure_field_model = 'endpoint_constrained';" in base
+
+    profile = (ROOT / 'src' / 'apply_physics_profile.m').read_text(encoding='utf-8')
+    assert "pressure_load_model = 'wall_stress_coupling'" in profile
+    assert "wall_formulation = 'thin_wall'" in profile
+    assert "capped_end = true" in profile
+
+    example = (ROOT / 'example_openpulse_consistent.m').read_text(encoding='utf-8')
+    assert "physics_profile = 'openpulse_consistent'" in example
 
 
 def test_hbm_interfaces_preserved_and_no_frequency_fitting_added():
